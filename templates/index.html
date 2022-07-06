@@ -1,0 +1,31 @@
+<h1>Hello World!</h1>
+
+<p>This is my first webpage!!!</p>
+
+<p>My name is {{first_name}}</p>
+
+<!-- passing the filter 'safe' so we can actually use the bold tag -->
+<!-- <p>{{stuff|safe}}</p> -->
+
+<!-- while striptags does the exact opposite
+<p>{{stuff|striptags}}</p> -->
+
+<p>{{stuff|title}}</p>
+
+<h3>Favorite Pizza:</h3>
+
+<!-- single curly brackets used for logic, for, if. -->
+{% for topping in favorite_pizza %}
+    {% if topping == 41 %}
+        {{topping + 100}} <br/>
+    
+    {% else %}
+        {{topping}}<br/>
+    
+    {% endif %}
+    <!-- double curly brackets used for variables. -->
+{% endfor %}
+
+<br><br>
+<!-- showing an item from a list. -->
+{{favorite_pizza.0|reverse}}
