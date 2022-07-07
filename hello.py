@@ -1,8 +1,17 @@
 from flask import Flask, render_template
-
+from flask_wtf import FlaskForm #framework for creating forms.
+from wtforms import StringField, SubmitField #Input box and submit button.
+from wtforms.validators import DataRequired #to validate wether input has been passed.
 
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
+
+app.config['SECRET_KEY'] = "my super secret key that no one is supposed to know" #security measure for working with whatheforms.
+
+#Create a Form Class
+class NamerForm(FlaskForm):
+    name = StringField("What's Your Name", validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
 #Create a route decorator
 @app.route('/')
@@ -53,3 +62,16 @@ def page_not_found(e):
 @app.errorhandler(500)
 def page_not_found(e):
     return render_template("500.html"), 500
+
+#Create Name Page
+@app.route('/name', methods=['GET', 'POST'])
+def name():
+    name = None
+    form = NamerForm()
+    #Validade Form
+    if form.validate_on_submit(): #if someone submits a name, replace name = None with whatever name they passed.
+        name = form.name.data
+        form.name.date = ''
+    return render_template("name.html",
+        name = name,
+        form = form)
