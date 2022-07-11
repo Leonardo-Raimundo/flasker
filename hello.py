@@ -8,7 +8,7 @@ from datetime import datetime #import current time.
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
 #Add Database.
-app.config['SQLAlchemy_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 #Secret Key.
 app.config['SECRET_KEY'] = "my super secret key that no one is supposed to know" #security measure for working with whatheforms.
 
@@ -25,8 +25,9 @@ class Users(db.Model):
         return '<Name %r>' % self.name
 
 #Create a Form Class
-class NamerForm(FlaskForm):
-    name = StringField("What's Your Name", validators=[DataRequired()])
+class UserForm(FlaskForm):
+    name = StringField("Name", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 #Create a route decorator
@@ -43,6 +44,10 @@ class NamerForm(FlaskForm):
 #tittle
 #trim
 #striptags
+
+@app.route('/user/add', metho=['GET', 'POST'])
+def add_user():
+     return render_template("add_user.html") 
 
 #returning index.html from templates folder.
 def index():
