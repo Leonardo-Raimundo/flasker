@@ -8,7 +8,11 @@ from datetime import datetime #import current time.
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
 #Add Database.
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+#Old SQLite DB
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+#New MySQL DB
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:1234@localhost/our_users'
+
 #Secret Key.
 app.config['SECRET_KEY'] = "my super secret key that no one is supposed to know" #security measure for working with whatheforms.
 
@@ -30,9 +34,6 @@ class UserForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
-#Create a route decorator
-@app.route('/')
-
 #def index():
 #    return "<h1>Hello World!</h1>"
 
@@ -45,9 +46,27 @@ class UserForm(FlaskForm):
 #trim
 #striptags
 
-@app.route('/user/add', metho=['GET', 'POST'])
+@app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
-     return render_template("add_user.html") 
+    name = None
+    form = UserForm()
+    if form.validate_on_submit(): #if someone submits a name, replace name = None with whatever name they passed.
+        user = Users.query.filter_by(email=form.email.data).first()
+        if user is None:
+            user = Users(name=form.name.data, email=form.email.data)
+            db.session.add(user)
+            db.session.commit()
+        name = form.name.data
+        form.name.data = ''
+        form.email.data = ''
+        flash("User Added Successfully!")
+    our_users = Users.query.order_by(Users.date_added)
+    return render_template("add_user.html", form=form, name=name, our_users=our_users) 
+        
+        
+
+#Create a route decorator
+@app.route('/')
 
 #returning index.html from templates folder.
 def index():
