@@ -11,7 +11,7 @@ app = Flask(__name__) #helps Flask find our files on the directory
 #Old SQLite DB
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 #New MySQL DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:1234@localhost/our_users'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root@localhost/our_users'
 
 #Secret Key.
 app.config['SECRET_KEY'] = "my super secret key that no one is supposed to know" #security measure for working with whatheforms.
