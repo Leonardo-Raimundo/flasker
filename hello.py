@@ -1,9 +1,10 @@
-from flask import Flask, flash, render_template
+from flask import Flask, flash, render_template, request
 from flask_wtf import FlaskForm #framework for creating forms.
 from wtforms import StringField, SubmitField #Input box and submit button.
 from wtforms.validators import DataRequired #to validate wether input has been passed.
-from flask_sqlalchemy import SQLAlchemy #import database.
 from datetime import datetime #import current time.
+from flask_sqlalchemy import SQLAlchemy #import database.
+from flask_migrate import Migrate
 
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
@@ -17,13 +18,16 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root@localhost/our_user
 app.config['SECRET_KEY'] = "my super secret key that no one is supposed to know" #security measure for working with whatheforms.
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 #Create a Model.
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
-
+    #adding new column
+    favorite_color = db.Column(db.String(120))
     #Create a String.
     def __repr__(self):
         return '<Name %r>' % self.name
@@ -32,8 +36,36 @@ class Users(db.Model):
 class UserForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired()])
+    #adding new line to form.
+    favorite_color = StringField("Favorite Color")
     submit = SubmitField("Submit")
 
+#Update Database Record
+@app.route('/update/<int:id>', methods=['GET', 'POST'])
+def update(id):
+    form = UserForm()
+    name_to_update = Users.query.get_or_404(id)
+    if request.method == "POST":
+        name_to_update.name = request.form['name']
+        name_to_update.email = request.form['email']
+        name_to_update.favorite_color = request.form['favorite_color']
+
+        try:
+            db.session.commit()
+            flash("User Updated Successfully!")
+            return render_template("update.html", 
+                form=form,
+                name_to_update=name_to_update)
+        except:
+            flash("Error! Looks like there was a problem...try again.")
+            return render_template("update.html", 
+                form=form,
+                name_to_update=name_to_update)
+    else:
+        return render_template("update.html", 
+                form=form,
+                name_to_update=name_to_update)
+            
 #def index():
 #    return "<h1>Hello World!</h1>"
 
@@ -53,12 +85,13 @@ def add_user():
     if form.validate_on_submit(): #if someone submits a name, replace name = None with whatever name they passed.
         user = Users.query.filter_by(email=form.email.data).first()
         if user is None:
-            user = Users(name=form.name.data, email=form.email.data)
+            user = Users(name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
         form.name.data = ''
         form.email.data = ''
+        form.favorite_color.data = ''
         flash("User Added Successfully!")
     our_users = Users.query.order_by(Users.date_added)
     return render_template("add_user.html", form=form, name=name, our_users=our_users) 
