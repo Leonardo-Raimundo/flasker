@@ -4,7 +4,8 @@ from wtforms import StringField, SubmitField #Input box and submit button.
 from wtforms.validators import DataRequired #to validate wether input has been passed.
 from datetime import datetime #import current time.
 from flask_sqlalchemy import SQLAlchemy #import database.
-from flask_migrate import Migrate
+from flask_migrate import Migrate #import stuff for migrating db.
+from werkzeug.security import generate_password_hash, check_password_hash #stuff for hashing passwords.
 
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
@@ -28,6 +29,20 @@ class Users(db.Model):
     #adding new column
     favorite_color = db.Column(db.String(120))
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
+    #do some password stuff!
+    password_hash = db.Column(db.String(128))
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute!')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
     #Create a String.
     def __repr__(self):
         return '<Name %r>' % self.name
