@@ -1,7 +1,7 @@
 from flask import Flask, flash, render_template, request
 from flask_wtf import FlaskForm #framework for creating forms.
-from wtforms import StringField, SubmitField #Input box and submit button.
-from wtforms.validators import DataRequired #to validate wether input has been passed.
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError #Input box and submit button.
+from wtforms.validators import DataRequired, EqualTo, Length #to validate wether input has been passed.
 from datetime import datetime #import current time.
 from flask_sqlalchemy import SQLAlchemy #import database.
 from flask_migrate import Migrate #import stuff for migrating db.
@@ -71,6 +71,8 @@ class UserForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired()])
     #adding new line to form.
     favorite_color = StringField("Favorite Color")
+    password_hash = PasswordField('Password', validators=[DataRequired(), EqualTo('password_hash2', message='Passwords must match!')])
+    password_hash2 = PasswordField('Confirm password', validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 #Update Database Record
@@ -118,14 +120,24 @@ def add_user():
     if form.validate_on_submit(): #if someone submits a name, replace name = None with whatever name they passed.
         user = Users.query.filter_by(email=form.email.data).first()
         if user is None:
-            user = Users(name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data)
+            #Hash the password.
+            hashed_pw = generate_password_hash(form.password_hash.data, "sha256")
+            user = Users(
+                name=form.name.data, 
+                email=form.email.data, 
+                favorite_color=form.favorite_color.data, password_hash=hashed_pw)
+            
             db.session.add(user)
             db.session.commit()
+        
         name = form.name.data
         form.name.data = ''
         form.email.data = ''
         form.favorite_color.data = ''
+        form.password_hash.data = ''
+        
         flash("User Added Successfully!")
+
     our_users = Users.query.order_by(Users.date_added)
     return render_template("add_user.html", form=form, name=name, our_users=our_users) 
         
