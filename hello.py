@@ -1,6 +1,8 @@
 import email
 from flask import Flask, flash, render_template, request
-from flask_wtf import FlaskForm #framework for creating forms.
+from flask_wtf import FlaskForm
+from pymysql import Date
+from sqlalchemy import PrimaryKeyConstraint #framework for creating forms.
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError #Input box and submit button.
 from wtforms.validators import DataRequired, EqualTo, Length #to validate wether input has been passed.
 from datetime import datetime #import current time.
@@ -8,6 +10,7 @@ from flask_sqlalchemy import SQLAlchemy #import database.
 from flask_migrate import Migrate #import stuff for migrating db.
 from werkzeug.security import generate_password_hash, check_password_hash #stuff for hashing passwords.
 from datetime import date
+from wtforms.widgets import TextArea
 
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
@@ -23,6 +26,49 @@ app.config['SECRET_KEY'] = "my super secret key that no one is supposed to know"
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+#Create a Blog Post Model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    slug = db.Column(db.String(255))
+
+#Create a Posts Form
+class PostForm(FlaskForm):
+    title = StringField("Title", validators=[DataRequired()])
+    content = StringField("Content", validators=[DataRequired()], widget=TextArea())
+    author = StringField("Author", validators=[DataRequired()])
+    slug = StringField("Slug", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+#Add Post Page
+@app.route('/add-post', methods=['GET', 'POST'])
+def add_post():
+    form = PostForm()
+
+    if form.validate_on_submit():
+        post = Posts(
+            title=form.title.data, 
+            content=form.content.data,
+            author=form.author.data,
+            slug=form.slug.data)
+        #Ckear the form
+        form.title.data = ''
+        form.content.data = ''
+        form.author.data = ''
+        form.slug.data = ''
+
+        #Add post data to database
+        db.session.add(post)
+        db.session.commit()
+
+        #return a message
+        flash("Blog Post Submitted Successfully!")
+
+    #return to the web page
+    return render_template("add_post.html", form=form)
 
 #Json Thing
 @app.route('/date')
