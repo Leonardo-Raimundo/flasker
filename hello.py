@@ -1,3 +1,4 @@
+import email
 from flask import Flask, flash, render_template, request
 from flask_wtf import FlaskForm #framework for creating forms.
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError #Input box and submit button.
@@ -100,7 +101,17 @@ def update(id):
         return render_template("update.html", 
                 form=form,
                 name_to_update=name_to_update, id = id)
-            
+
+class PasswordForm(FlaskForm):
+    email = StringField("What's your Email", validators=[DataRequired()])
+    password_hash = PasswordField("What's your Password", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+#Create a Form Class
+class NamerForm(FlaskForm):
+    name = StringField("What's your name", validators=[DataRequired()])
+    submit = SubmitField("Submit") 
+
 #def index():
 #    return "<h1>Hello World!</h1>"
 
@@ -179,6 +190,35 @@ def page_not_found(e):
 @app.errorhandler(500)
 def page_not_found(e):
     return render_template("500.html"), 500
+
+#Create Password Test Page
+@app.route('/test_pw', methods=['GET', 'POST'])
+def test_pw():
+    email = None
+    password = None
+    pw_to_check = None
+    passed = None
+    form = PasswordForm()
+
+    #Validade Form
+    if form.validate_on_submit(): #if someone submits a name, replace name = None with whatever name they passed.
+        email = form.email.data
+        password = form.password_hash.data
+        form.email.data = ''
+        form.password_hash.data = ''
+        
+        #Lookup user by email adress.
+        pw_to_check = Users.query.filter_by(email=email).first()
+        
+        #Check hashed password.
+        passed = check_password_hash(pw_to_check.password_hash, password)
+
+    return render_template("test_pw.html",
+        email = email,
+        password = password,
+        pw_to_check = pw_to_check,
+        passed = passed,
+        form = form)
 
 #Create Name Page
 @app.route('/name', methods=['GET', 'POST'])
