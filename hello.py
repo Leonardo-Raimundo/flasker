@@ -7,6 +7,7 @@ from datetime import datetime #import current time.
 from flask_sqlalchemy import SQLAlchemy #import database.
 from flask_migrate import Migrate #import stuff for migrating db.
 from werkzeug.security import generate_password_hash, check_password_hash #stuff for hashing passwords.
+from datetime import date
 
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
@@ -21,6 +22,18 @@ app.config['SECRET_KEY'] = "my super secret key that no one is supposed to know"
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+
+#Json Thing
+@app.route('/date')
+def get_current_date():
+    favorite_pizza = {
+        "Leonardo": "Bacon",
+        "Joana": "Pepperoni",
+        "Frida": "Fish"
+    }
+    return favorite_pizza
+    #return {"Date": date.today()}
 
 #Create a Model.
 class Users(db.Model):
