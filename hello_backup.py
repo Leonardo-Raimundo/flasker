@@ -12,7 +12,6 @@ from werkzeug.security import generate_password_hash, check_password_hash #stuff
 from datetime import date
 from wtforms.widgets import TextArea
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm 
 
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
@@ -36,6 +35,13 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return Users.query.get(int(user_id))
+
+
+#create login form
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
 #create login page
 @app.route('/login', methods=['GET', 'POST'])
@@ -63,6 +69,7 @@ def logout():
     logout_user()
     flash("You have been logged out. Thanks for stopping by!")
     return redirect(url_for('login'))
+
 
 #create dashboard page
 @app.route('/dashboard', methods=['GET', 'POST'])
@@ -95,7 +102,22 @@ def dashboard():
     
     return render_template('dashboard.html')
 
+#Create a Blog Post Model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    slug = db.Column(db.String(255))
 
+#Create a Posts Form
+class PostForm(FlaskForm):
+    title = StringField("Title", validators=[DataRequired()])
+    content = StringField("Content", validators=[DataRequired()], widget=TextArea())
+    author = StringField("Author", validators=[DataRequired()])
+    slug = StringField("Slug", validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
 @app.route('/posts/delete/<int:id>')
 def delete_post(id):
@@ -188,6 +210,33 @@ def get_current_date():
     return favorite_pizza
     #return {"Date": date.today()}
 
+#Create a Model.
+class Users(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False, unique=True)
+    name = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(120), nullable=False, unique=True)
+    #adding new column
+    favorite_color = db.Column(db.String(120))
+    date_added = db.Column(db.DateTime, default=datetime.utcnow)
+    #do some password stuff!
+    password_hash = db.Column(db.String(128))
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute!')
+
+    @password.setter
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    #Create a String.
+    def __repr__(self):
+        return '<Name %r>' % self.name
+
 @app.route('/delete/<int:id>')
 def delete(id):
     user_to_delete = Users.query.get_or_404(id)
@@ -205,6 +254,17 @@ def delete(id):
     except:
         flash("Whoops! There was a problem deleting user, try again.") 
         return render_template("add_user.html", form=form, name=name, our_users=our_users)
+
+#Create a Form Class
+class UserForm(FlaskForm):
+    name = StringField("Name", validators=[DataRequired()])
+    username = StringField("Username", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired()])
+    #adding new line to form.
+    favorite_color = StringField("Favorite Color")
+    password_hash = PasswordField('Password', validators=[DataRequired(), EqualTo('password_hash2', message='Passwords must match!')])
+    password_hash2 = PasswordField('Confirm password', validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
 #Update Database Record
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
@@ -232,6 +292,28 @@ def update(id):
         return render_template("update.html", 
                 form=form,
                 name_to_update=name_to_update, id = id)
+
+class PasswordForm(FlaskForm):
+    email = StringField("What's your Email", validators=[DataRequired()])
+    password_hash = PasswordField("What's your Password", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+#Create a Form Class
+class NamerForm(FlaskForm):
+    name = StringField("What's your name", validators=[DataRequired()])
+    submit = SubmitField("Submit") 
+
+#def index():
+#    return "<h1>Hello World!</h1>"
+
+#filters
+#safe
+#capitalize
+#lower
+#upper
+#tittle
+#trim
+#striptags
 
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
@@ -263,6 +345,8 @@ def add_user():
     our_users = Users.query.order_by(Users.date_added)
     return render_template("add_user.html", form=form, name=name, our_users=our_users) 
         
+        
+
 #Create a route decorator
 @app.route('/')
 
@@ -343,39 +427,3 @@ def name():
     return render_template("name.html",
         name = name,
         form = form)
-
-#Create a Model.
-class Users(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), nullable=False, unique=True)
-    name = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    #adding new column
-    favorite_color = db.Column(db.String(120))
-    date_added = db.Column(db.DateTime, default=datetime.utcnow)
-    #do some password stuff!
-    password_hash = db.Column(db.String(128))
-
-    @property
-    def password(self):
-        raise AttributeError('password is not a readable attribute!')
-
-    @password.setter
-    def password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    #Create a String.
-    def __repr__(self):
-        return '<Name %r>' % self.name
-
-#Create a Blog Post Model
-class Posts(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    title = db.Column(db.String(255))
-    content = db.Column(db.Text)
-    author = db.Column(db.String(255))
-    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
-    slug = db.Column(db.String(255))
