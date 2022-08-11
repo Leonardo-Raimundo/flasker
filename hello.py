@@ -149,12 +149,16 @@ def edit_post(id):
         flash("Post has been updated!")
         return redirect(url_for('post', id=post.id))
 
-    form.title.data = post.title
-    #form.author.data = post.author
-    form.slug.data = post.slug
-    form.content.data = post.content
-    return render_template('edit_post.html', form = form)
-
+    if current_user.id == post.poster_id:
+        form.title.data = post.title
+        #form.author.data = post.author
+        form.slug.data = post.slug
+        form.content.data = post.content
+        return render_template('edit_post.html', form = form)
+    else:
+        flash("You aren't authorized to edit this post!")
+        posts = Posts.query.order_by(Posts.date_posted)
+        return render_template("posts.html", posts=posts)
 #Add Post Page
 @app.route('/add-post', methods=['GET', 'POST'])
 #@login_required
