@@ -98,21 +98,27 @@ def dashboard():
 
 
 @app.route('/posts/delete/<int:id>')
+@login_required
 def delete_post(id):
     post_to_delete = Posts.query.get_or_404(id)
-    
-    try:
-        db.session.delete(post_to_delete)
-        db.session.commit()
+    id = current_user.id
+    if id == post_to_delete.poster.id:
+        try:
+            db.session.delete(post_to_delete)
+            db.session.commit()
 
-        #return a message
-        flash("Blog post was deleted!")
-        posts = Posts.query.order_by(Posts.date_posted)
-        return render_template("posts.html", posts=posts)
-    
-    except:
-        #return an error messsage
-        flash("Whoops! There was a problem deleting the post. Try again!")
+            #return a message
+            flash("Blog post was deleted!")
+            posts = Posts.query.order_by(Posts.date_posted)
+            return render_template("posts.html", posts=posts)
+        
+        except:
+            #return an error messsage
+            flash("Whoops! There was a problem deleting the post. Try again!")
+            posts = Posts.query.order_by(Posts.date_posted)
+            return render_template("posts.html", posts=posts)
+    else:
+        flash("You aren't authorized to delete that post!")
         posts = Posts.query.order_by(Posts.date_posted)
         return render_template("posts.html", posts=posts)
 
