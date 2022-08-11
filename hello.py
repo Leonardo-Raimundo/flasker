@@ -134,7 +134,7 @@ def edit_post(id):
     form = PostForm()
     if form.validate_on_submit():
         post.title = form.title.data
-        post.author = form.author.data
+        #post.author = form.author.data
         post.slug = form.slug.data
         post.content = form.content.data
         #Updata database
@@ -144,7 +144,7 @@ def edit_post(id):
         return redirect(url_for('post', id=post.id))
 
     form.title.data = post.title
-    form.author.data = post.author
+    #form.author.data = post.author
     form.slug.data = post.slug
     form.content.data = post.content
     return render_template('edit_post.html', form = form)
@@ -156,15 +156,16 @@ def add_post():
     form = PostForm()
 
     if form.validate_on_submit():
+        poster = current_user.id
         post = Posts(
             title=form.title.data, 
             content=form.content.data,
-            author=form.author.data,
+            poster_id = poster,
             slug=form.slug.data)
-        #Ckear the form
+        #Clear the form
         form.title.data = ''
         form.content.data = ''
-        form.author.data = ''
+        #form.author.data = ''
         form.slug.data = ''
 
         #Add post data to database
@@ -356,6 +357,8 @@ class Users(db.Model, UserMixin):
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
     #do some password stuff!
     password_hash = db.Column(db.String(128))
+    # User can have many posts
+    posts = db.relationship('Posts', backref='poster')
 
     @property
     def password(self):
@@ -377,6 +380,8 @@ class Posts(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     title = db.Column(db.String(255))
     content = db.Column(db.Text)
-    author = db.Column(db.String(255))
+    #author = db.Column(db.String(255))
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     slug = db.Column(db.String(255))
+    # Foreign key to link user (refer to the primary key of the user)
+    poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
