@@ -13,10 +13,13 @@ from werkzeug.security import generate_password_hash, check_password_hash #stuff
 from datetime import date
 from wtforms.widgets import TextArea
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm, SearchForm 
+from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm, SearchForm
+from flask_ckeditor import CKEditor 
 
 #Create a Flask Instane
 app = Flask(__name__) #helps Flask find our files on the directory
+#add ckeditor
+ckeditor = CKEditor(app)
 #Add Database.
 #Old SQLite DB
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
