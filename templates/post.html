@@ -20,6 +20,10 @@
    <small> By: {{ post.poster.name }} <br>
     {{ post.date_posted }} <br> <br>
     {{ post.content|safe }}</small> <br> <br>
+
+    {% if post.poster.about_author %}
+        {{ post.poster.about_author }}
+    {% endif %}
     <!-- <hr> <br> -->
 </div>
 

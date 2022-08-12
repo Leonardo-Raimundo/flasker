@@ -30,6 +30,7 @@
             <strong>E-mail: </strong>{{ current_user.email }} <br>
             <strong>Favorite Color: </strong>{{ current_user.favorite_color }} <br>
             <strong>Date Added: </strong>{{ current_user.date_added }} <br>
+            <strong>About Author: </strong>{{ current_user.about_author }} <br>
         </p>
           <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Logout</a>
 
@@ -87,6 +88,12 @@
                 {{ form.favorite_color(
                     class="form-control",
                     value=name_to_update.favorite_color) }}
+                <br>
+
+                {{ form.about_author.label (
+                    class="form-label") }}
+
+                <textarea name="about_author" class="form-control">{{ name_to_update.about_author }}</textarea>
                 <br>
     
                 {{ form.submit(
